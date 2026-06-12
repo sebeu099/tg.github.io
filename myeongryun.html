@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>망각전야 - 명륜 정보</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #192326;
+            color: #e3e8e9;
+            font-family: 'Noto Sans KR', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+
+        .main-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: calc(1.8rem + 4px);
+            letter-spacing: 3px;
+            color: #9eb1b6;
+            text-transform: uppercase;
+            margin-bottom: 35px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .grade-title {
+            font-size: calc(1.4rem + 4px);
+            letter-spacing: 2px;
+            margin: 40px 0 20px 0;
+            padding-left: 10px;
+            font-weight: 700;
+        }
+        .grade-title.ssr {
+            color: #ffd700;
+            border-left: 4px solid #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        .grade-title.sr {
+            color: #b19ffb;
+            border-left: 4px solid #b19ffb;
+            text-shadow: 0 0 10px rgba(177, 159, 251, 0.3);
+        }
+
+        /* 그리드 틀 고정 */
+        .myeongryun-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        /* 카드 자체의 높이가 변할 때 주변 레이아웃이 깨지지 않도록 감싸는 컨테이너 */
+        .card-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1; /* 기본 자리를 1:1로 고정하여 밀림 방지 */
+        }
+
+        /* 명륜 카드 기본 스타일 및 애니메이션 */
+        .myeongryun-card {
+            position: absolute; /* wrapper 내부에서 절대 좌표로 띄움 */
+            top: 0;
+            left: 0;
+            background: #11181a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0;
+            cursor: pointer;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            z-index: 10;
+            /* 1:2 비율로 변할 때 부드럽게 늘어나도록 transition 설정 */
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        border-color 0.4s ease, 
+                        box-shadow 0.4s ease,
+                        z-index 0.1s ease;
+        }
+
+        .myeongryun-card.ssr-card { border-color: rgba(255, 215, 0, 0.2); }
+        .myeongryun-card.sr-card { border-color: rgba(177, 159, 251, 0.2); }
+
+        /* 마우스 호버 시 붕 뜨면서 최상단으로 레이어 배치 */
+        .myeongryun-card:hover {
+            background: #162023;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            transform: translateY(-10px);
+            z-index: 999; /* 다른 모든 카드를 덮음 */
+        }
+        .myeongryun-card.ssr-card:hover { border-color: rgba(255, 215, 0, 0.6); }
+        .myeongryun-card.sr-card:hover { border-color: rgba(177, 159, 251, 0.6); }
+
+        .myeongryun-card::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        /* 이미지 박스 기본 1:1에서 호버 시 1:2로 변경 */
+        .image-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1; /* 평소에는 정사각형 1:1 */
+            height: auto;
+            background: #0d1214;
+            overflow: hidden;
+            transition: aspect-ratio 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        /* 마우스를 올린 해당 카드의 이미지만 1:2로 확장 */
+        .myeongryun-card:hover .image-box {
+            aspect-ratio: 1 / 2;
+        }
+        
+        .image-box .myeong-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        
+        .myeongryun-card:hover .image-box .myeong-img {
+            transform: scale(1.03);
+        }
+
+        /* 설명 영역 내부 이름 및 옵션 */
+        .myeong-name-kr { 
+            font-size: calc(1.4rem + 4px);
+            font-weight: 700; 
+            letter-spacing: 1px; 
+            margin-bottom: 10px; 
+            text-align: left;
+        }
+        .ssr-card .myeong-name-kr { color: #ffd700; text-shadow: 0 0 6px rgba(255,215,0,0.2); }
+        .sr-card .myeong-name-kr { color: #b19ffb; text-shadow: 0 0 6px rgba(177,159,251,0.2); }
+        
+        .myeong-main-option { 
+            font-size: calc(0.9rem + 4px); 
+            color: #e3e8e9; 
+            letter-spacing: 0.5px; 
+            background: rgba(255, 255, 255, 0.04); 
+            padding: 6px 14px; 
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 25px; 
+            border: 1px solid rgba(255,255,255,0.05);
+            width: 100%; 
+        }
+        .ssr-card .myeong-main-option { color: #ffd700; background: rgba(255, 215, 0, 0.05); border-color: rgba(255, 215, 0, 0.15); }
+        .sr-card .myeong-main-option { color: #b19ffb; background: rgba(177, 159, 251, 0.05); border-color: rgba(177, 159, 251, 0.15); }
+
+        /* 우측 가로 확장 레이어 (1:2 높이에 유연하게 대응) */
+        .info-expand-layer {
+            position: absolute;
+            top: -1px;
+            left: 100%;
+            width: 400px;
+            height: calc(100% + 2px); 
+            background: rgba(10, 15, 16, 0.98); 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            box-shadow: 15px 0 30px rgba(0, 0, 0, 0.5);
+            
+            max-width: 0;
+            opacity: 0;
+            overflow: hidden;
+            white-space: normal;
+            pointer-events: none;
+            
+            transition: max-width 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        opacity 0.3s ease,
+                        border-color 0.4s ease;
+        }
+
+        .myeongryun-card:hover .info-expand-layer {
+            max-width: 400px;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .myeongryun-card.ssr-card:hover .info-expand-layer { border-color: rgba(255, 215, 0, 0.4); border-left-color: rgba(255,255,255,0.1); }
+        .myeongryun-card.sr-card:hover .info-expand-layer { border-color: rgba(177, 159, 251, 0.4); border-left-color: rgba(255,255,255,0.1); }
+
+        /* 화면 끝 우측 이탈 방지 (3열 그리드 기준 제어) */
+        @media (min-width: 1025px) {
+            .myeongryun-grid .card-wrapper:nth-child(3n) .info-expand-layer,
+            .myeongryun-grid .card-wrapper:last-child .info-expand-layer {
+                left: auto;
+                right: 100%;
+                box-shadow: -15px 0 30px rgba(0, 0, 0, 0.5);
+            }
+        }
+        
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            .card-wrapper { aspect-ratio: auto; height: auto; margin-bottom: 20px; }
+            .myeongryun-card { position: static; overflow: hidden; }
+            .image-box { aspect-ratio: 1 / 1 !important; } 
+            .info-expand-layer {
+                position: static;
+                width: 100%;
+                max-height: 0;
+                max-width: none !important;
+                opacity: 0;
+                transition: max-height 0.4s ease, opacity 0.3s ease;
+                border: none !important;
+                border-top: 1px solid rgba(255,255,255,0.05) !important;
+                padding: 20px;
+            }
+            .myeongryun-card:hover .info-expand-layer {
+                max-height: 1000px;
+                opacity: 1;
+            }
+        }
+
+        .info-title-label {
+            font-size: calc(0.8rem + 4px);
+            color: #8a999d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            text-align: left;
+            border-left: 2px solid rgba(255,255,255,0.3);
+            padding-left: 6px;
+        }
+        .ssr-card .info-title-label { color: #ffd700; border-left-color: #ffd700; }
+        .sr-card .info-title-label { color: #b19ffb; border-left-color: #b19ffb; }
+
+        .info-description {
+            font-size: calc(0.85rem + 4px);
+            color: #ffffff;
+            line-height: 1.7;
+            text-align: left;
+            word-break: keep-all;
+        }
+
+        .back-home-container { text-align: center; margin-top: 50px; }
+        .back-btn { 
+            background: transparent; 
+            border: 1px solid rgba(255,255,255,0.15); 
+            color: #ccd7d9; 
+            padding: 14px 35px; 
+            cursor: pointer; 
+            letter-spacing: 1px; 
+            transition: all 0.25s; 
+            transform: skewX(-10deg);
+            font-size: calc(0.9rem + 4px);
+        }
+        .back-btn span {
+            display: inline-block;
+            transform: skewX(10deg);
+        }
+        .back-btn:hover { border-color: #ffffff; color: #ffffff; background: #11181a; }
+    </style>
+</head>
+<body>
+
+    <div class="main-content">
+        <h2 class="section-title">명륜 정보</h2>
+
+        <div class="grade-title ssr">SSR GRADE</div>
+        <div class="myeongryun-grid">
+            
+            <div class="card-wrapper">
+                <div class="myeongryun-card ssr-card">
+                    <div class="image-box">
+                        <img src="감춰진 수레바퀴.png" class="myeong-img" alt="감춰진 수레바퀴">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="myeong-name-kr">감춰진 수레바퀴</div>
+                        <div class="myeong-main-option">주옵션: 은열쇠 충전 21.6</div>
+                        <div class="info-title-label">명륜 상세 정보</div>
+                        <div class="info-description">
+                            팀 유일: 은열쇠 충전 한도가 100% 증가한다. 손패 상한이 2 증가하고, 다른 명륜이 제공하는 손패 상한과 중첩되지 않는다. 장비자의 은열쇠 충전이 13/17/21/25% 증가한다. 장비자가 카드를 사용하면, 해당 턴 동안 장비자 명령 카드의 크리티컬 확률, 크리티컬 피해, 생성되는 방어막, 광기 및 힘이 3/4/5/6% 증가하며, 최대 5회까지 중첩된다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-wrapper">
+                <div class="myeongryun-card ssr-card">
+                    <div class="image-box">
+                        <img src="자비로운양육.png" class="myeong-img" alt="자비로운 양육">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="myeong-name-kr">자비로운 양육</div>
+                        <div class="myeong-main-option">주옵션: 은열쇠 충전 21.6</div>
+                        <div class="info-title-label">명륜 상세 정보</div>
+                        <div class="info-description">
+                            팀 유일: 손패 상한이 2 증가하고, 다른 명륜이 제공하는 손패 상한과 중첩되지 않는다. 턴 종료 시, 장비자의 은열쇠 충전의 150/200/250/300%에 해당하는 은열쇠 에너지를 획득한다. 은열쇠를 발동할 때마다 모든 각성체가 3/4/5/6 광기를 획득한다. 현재 영역이 "혈육"일 경우, 은열쇠를 발동할 때마다 배아 융합이 13/17/21/25% 증가한다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-wrapper">
+                <div class="myeongryun-card ssr-card">
+                    <div class="image-box">
+                        <img src="마지막시편.png" class="myeong-img" alt="마지막 시편">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="myeong-name-kr">마지막 시편</div>
+                        <div class="myeong-main-option">주옵션: 죽음 저항 50.4%</div>
+                        <div class="info-title-label">명륜 상세 정보</div>
+                        <div class="info-description">
+                            팀 유일: 장비자 명령 카드의 크리티컬 확률, 크리티컬 피해, 방어막, HP 회복, 광기, 힘이 11/14/17/20% 증가한다. 현재 영역이 "초차원"일 경우, 소멸 발동 시 110/140/170/200 은열쇠 에너지를 획득한다. 초차원 턴 진입 후, 이 턴 동안 온열쇠 효과가 2회 발동한다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-wrapper">
+                <div class="myeongryun-card ssr-card">
+                    <div class="image-box">
+                        <img src="견딜 수 없는 자유.png" class="myeong-img" alt="견딜 수 없는 자유">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="myeong-name-kr">견딜 수 없는 자유</div>
+                        <div class="myeong-main-option">주옵션: 피해 증폭 14.4%</div>
+                        <div class="info-title-label">명륜 상세 정보</div>
+                        <div class="info-description">
+                            팀 유일: 손폐 상한이 2 증가하고, 다른 명륜이 제공하는 손폐 상한과 중첩되지 않는다. 장비자의 방어막 및 기본 피해가 9/11/13/15% 증가한다. 초차원 턴에 진입 시, 장비자가 35/50/65/80 광기를 획득한다. 소멸 발동시 모든 각성체의 임시 크리티컬 피해가 13/17/21/25% 증가한다. 이 효과는 3년의 쿨타임이 존재한다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="grade-title sr">SR GRADE</div>
+        <div class="myeongryun-grid">
+            
+            <div class="card-wrapper">
+                <div class="myeongryun-card sr-card">
+                    <div class="image-box">
+                        <img src="정신집중.png" class="myeong-img" alt="정신집중">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="myeong-name-kr">정신집중</div>
+                        <div class="myeong-main-option">주옵션: 은열쇠 충전 10.8</div>
+                        <div class="info-title-label">명륜 상세 정보</div>
+                        <div class="info-description">
+                            팀 유일: 은열쇠 발동 후, 장비자는 9/11/13/15 광기를 획득한다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-wrapper">
+                <div class="myeongryun-card sr-card">
+                    <div class="image-box">
+                        <img src="존재하지 않는 곳.png" class="myeong-img" alt="존재하지 않는 곳">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="myeong-name-kr">존재하지 않는 곳</div>
+                        <div class="myeong-main-option">주옵션: 검은 인장 드름을 5.4%</div>
+                        <div class="info-title-label">명륜 상세 정보</div>
+                        <div class="info-description">
+                            팀 유일: 탐색 시작 시 장비자의 "방어' 1장을 덱에 추가하고, 장비자의 '방어' 방어막이 22/28/34/40% 증가한다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-wrapper">
+                <div class="myeongryun-card sr-card">
+                    <div class="image-box">
+                        <img src="소중한친구에게.png" class="myeong-img" alt="소중한 친구에게">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="myeong-name-kr">소중한 친구에게</div>
+                        <div class="myeong-main-option">주옵션: 크리티컬 피해 10.8%</div>
+                        <div class="info-title-label">명륜 상세 정보</div>
+                        <div class="info-description">
+                            팀 유일: 장비자가 광기 폭발을 사용한 후, 이 턴 모든 아군의 크리티컬 확률이 13/17/21/25% 증가한다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-wrapper">
+                <div class="myeongryun-card sr-card">
+                    <div class="image-box">
+                        <img src="모임의 순간.png" class="myeong-img" alt="모임의 순간">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="myeong-name-kr">모임의 순간</div>
+                        <div class="myeong-main-option">주옵션: 은열쇠 충전 10.8</div>
+                        <div class="info-title-label">명륜 상세 정보</div>
+                        <div class="info-description">
+                            팀 유일: 장비자의 카드를 1장 사용할 때마다 20/30/40/50 은열쇠 에너지를 획득한다. 이 효과는 한 턴에 최대 3번 적용된다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="back-home-container">
+            <button class="back-btn" onclick="window.location.href='index.html'"><span>메인으로 돌아가기</span></button>
+        </div>
+    </div>
+
+</body>
+</html>

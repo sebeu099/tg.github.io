@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>망각전야 (Morimens) 팬 페이지</title>
+    <style>
+        /* 기본 스타일 초기화 및 배경색 설정 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #192326;
+            color: #e3e8e9;
+            font-family: 'Noto Sans KR', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 1. 초기 화면 (클릭 전까지 전체 화면을 완전히 덮어 고정) */
+        .hero-section {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            /* background 대신 내부 video 태그로 대체되므로 배경색만 지정 */
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; 
+            cursor: pointer;
+            overflow: hidden;
+            transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 1.5s;
+        }
+        
+        /* 배경 동영상 스타일링 */
+        .hero-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: translate(-50%, -50%);
+            pointer-events: none; /* 비디오가 클릭을 방해하지 않도록 설정 */
+            z-index: 1;
+        }
+        
+        /* 하단 그라데이션 마스크 처리 */
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: transparent;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+            pointer-events: none;
+            z-index: 2; /* 동영상 위로 올림 */
+        }
+
+        /* CLICK TO ENTER 안내 가이드 */
+        .hero-section::after {
+            content: 'CLICK TO ENTER';
+            position: absolute;
+            bottom: 15%;
+            color: rgba(227, 232, 233, 0.6);
+            font-size: 0.9rem;
+            letter-spacing: 5px;
+            font-weight: 500;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            animation: blink 2s infinite;
+            pointer-events: none;
+            z-index: 10000;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* 클릭 액션 이후 페이드아웃 상태 클래스 */
+        .hero-section.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* 되돌아왔을 때 덜컥거림을 방지하기 위한 즉시 숨김 클래스 */
+        .hero-section.no-transition {
+            transition: none !important;
+        }
+
+        /* 클릭 좌표 중심 일렁이는 물결(Ripple) 파동 디자인 */
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(158, 177, 182, 0.5) 0%, rgba(38, 55, 59, 0.2) 40%, rgba(25, 35, 38, 0) 70%);
+            border: 1px solid rgba(158, 177, 182, 0.25);
+            pointer-events: none;
+            transform: scale(0);
+            animation: ripple-animation 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            z-index: 10001;
+        }
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* 2. 고정 상단 배너 */
+        .top-banner-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 180px; 
+            background: url(top.jpg) center/cover no-repeat;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            border-bottom: 2px solid rgba(255,255,255,0.05);
+        }
+        .top-banner-view::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to bottom, rgba(25, 35, 38, 0) 0%, #192326 100%);
+        }
+
+        body.page-opened .top-banner-view {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 메인 콘텐츠 영역 (첫 화면 뒤에서 대기하다가 부드럽게 상승 등장) */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            position: relative;
+            z-index: 10;
+            margin-top: 180px;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1.2s ease 0.4s, transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) 0.4s;
+        }
+        body.page-opened .main-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 되돌아왔을 때 본문이 흐느적거리며 올라오지 않게 즉시 노출하는 클래스 */
+        body.page-opened-direct .main-content {
+            transition: none !important;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        body.page-opened-direct .top-banner-view {
+            transition: none !important;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 타이틀 섹션 (정보모음) */
+        .section-title {
+            text-align: center;
+            font-size: 1.8rem;
+            letter-spacing: 3px;
+            color: #9eb1b6;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        /* ========================================================
+           게임 내 이벤트 영역 - 10초 자동 순환 및 스마트폰 터치 제어 슬라이더
+           ======================================================== */
+        .event-slider-container {
+            width: 100%;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: #11181a;
+            /* 터치 스와이프 시 뷰포트 전체 화면이 흔들리거나 바운스되는 현상 제어 */
+            touch-action: pan-y; 
+        }
+
+        .event-slider-container::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .slider-wrapper {
+            display: flex;
+            width: 100%;
+            aspect-ratio: 16 / 9; 
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .slide-item {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .slide-item:nth-child(1) { background: url('콜라보 배너 사이트.webp') center/cover no-repeat; }
+        .slide-item:nth-child(2) { background: url('콜라보 이벤트 스토리.png') center/cover no-repeat; }
+        .slide-item:nth-child(3) { background: url('콜라보 이벤트 보상 몽록.webp') center/cover no-repeat; }
+        
+        .slide-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #111719 0%, #1c272a 100%);
+            color: #8a999d;
+        }
+        
+        .slide-item.clickable { cursor: pointer; }
+
+        /* PC용 내비게이션 좌우 제어 화살표 디자인 */
+        .slider-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 45px;
+            height: 45px;
+            background: rgba(17, 24, 26, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ccd7d9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.25s ease;
+        }
+        .slider-arrow-inner {
+            width: 12px;
+            height: 12px;
+            border-top: 2px solid #ccd7d9;
+            border-right: 2px solid #ccd7d9;
+            transition: border-color 0.25s;
+        }
+        .arrow-left { left: 20px; }
+        .arrow-left .slider-arrow-inner { transform: rotate(-135deg); }
+        .arrow-right { right: 20px; }
+        .arrow-right .slider-arrow-inner { transform: rotate(45deg); }
+
+        .slider-arrow:hover {
+            background: #162023;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        .slider-arrow:hover .slider-arrow-inner { border-color: #ffffff; }
+
+        @media (max-width: 768px) {
+            .slider-arrow { display: none; }
+        }
+
+        /* 하단 인디케이터 도트 래퍼 */
+        .slider-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 6;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(0, 0, 0, 0.4);
+            transform: rotate(45deg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: #ffffff;
+            border-color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        /* ========================================================
+            3. 버튼 디자인 레이아웃 (남은 4개 필수 정보 그리드)
+           ======================================================== */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .menu-item {
+            position: relative;
+            background: #11181a; 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 140px;
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+        }
+
+        .menu-item:hover {
+            background: #162023;
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.05), 0 10px 20px rgba(0,0,0,0.4);
+            transform: translateY(-2px);
+        }
+
+        .menu-item span {
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: #ccd7d9;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            transition: color 0.3s;
+        }
+        .menu-item:hover span { color: #ffffff; }
+
+        .menu-item .icon-deco {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+            transform: rotate(45deg);
+            transition: all 0.3s;
+            position: relative;
+        }
+        .menu-item:hover .icon-deco {
+            border-color: #ffffff;
+            transform: rotate(135deg);
+        }
+
+        /* ========================================================
+           오디오 컨트롤러 스타일 (우측 하단 고정)
+           ======================================================== */
+        .audio-controller {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(17, 24, 26, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 10px 15px;
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s, border-color 0.3s;
+        }
+        .audio-controller:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(22, 32, 35, 0.95);
+        }
+        .mute-btn {
+            background: none;
+            border: none;
+            color: #ccd7d9;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+            width: 24px;
+            height: 24px;
+        }
+        .mute-btn:hover { color: #ffffff; }
+        .volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 80px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            background: #ccd7d9;
+            border-radius: 50%;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .volume-slider::-webkit-slider-thumb:hover {
+            background: #ffffff;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 초기 화면: front.jpg 대신 front.webm 동영상이 재생되도록 내부에 video 태그 삽입 -->
+    <div class="hero-section" id="heroSection" onclick="handleHeroClick(event)">
+        <video class="hero-video" src="front.webm" autoplay loop muted playsinline></video>
+    </div>
+
+    <audio id="bgm" src="사야의 노래.mp3" loop></audio>
+
+    <div class="audio-controller">
+        <button class="mute-btn" id="muteBtn" onclick="toggleMute()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M11.536 14.01A8.47 8.47 0 0 0 14 10c0-1.68-.487-3.243-1.325-4.556a.5.5 0 0 0-.85.526A7.47 7.47 0 0 1 13 10c0 1.472-.4 2.852-1.101 4.028a.5.5 0 0 0 .848.544z"/>
+                <path d="M9.774 11.246A1 1 0 0 0 10 11V5a1 1 0 0 0-1.707-.707L5.828 6.757H4a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h1.828l2.465 2.465a1 1 0 0 0 .481.224z"/>
+            </svg>
+        </button>
+        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0" oninput="changeVolume(this.value)">
+    </div>
+
+    <div class="top-banner-view" id="topBanner"></div>
+
+    <div class="main-content">
+        <h2 class="section-title">정보모음</h2>
+        
+        <div class="event-slider-container" id="eventSliderContainer">
+            <div class="slider-arrow arrow-left" onclick="prevSlide()"><div class="slider-arrow-inner"></div></div>
+            <div class="slider-arrow arrow-right" onclick="nextSlide()"><div class="slider-arrow-inner"></div></div>
+
+            <div class="slider-wrapper" id="sliderWrapper">
+                <div class="slide-item clickable" onclick="window.open('https://www.bokyakuzenya.com/sp', '_blank')"></div>
+                <div class="slide-item clickable" onclick="navigateToPage('event-detail-2')"></div>
+                <div class="slide-item clickable" onclick="navigateToPage('event-detail-3')"></div>
+            </div>
+            
+            <div class="slider-dots" id="sliderDots">
+                <div class="dot active" onclick="goToSlide(0)"></div>
+                <div class="dot" onclick="goToSlide(1)"></div>
+                <div class="dot" onclick="goToSlide(2)"></div>
+            </div>
+        </div>
+
+        <div class="menu-grid">
+            <div class="menu-item" onclick="navigateToPage('awakening')">
+                <div class="icon-deco"></div>
+                <span>각성체 정보</span>
+            </div>
+            <div class="menu-item" onclick="navigateToPage('myeongryun')">
+                <div class="icon-deco"></div>
+                <span>명륜 정보</span>
+            </div>
+            <div class="menu-item" onclick="navigateToPage('secret-contract')">
+                <div class="icon-deco"></div>
+                <span>비밀계약 정보</span>
+            </div>
+            <div class="menu-item" onclick="navigateToPage('coupon-code')">
+                <div class="icon-deco"></div>
+                <span>교환코드</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const bgm = document.getElementById('bgm');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const muteBtn = document.getElementById('muteBtn');
+        const heroSection = document.getElementById('heroSection');
+        
+        let userInteractedWithVolume = false; 
+        let targetVolume = 0.0; 
+        let fadeAnimationId = null;
+        let pageOpened = false;
+
+        // 새로고침과 뒤로가기를 엄격히 구분하는 로직
+        document.addEventListener("DOMContentLoaded", () => {
+            const perfEntries = performance.getEntriesByType("navigation");
+            let isReload = false;
+
+            if (perfEntries.length > 0) {
+                if (perfEntries[0].type === "reload") {
+                    isReload = true;
+                }
+            }
+
+            if (isReload) {
+                sessionStorage.removeItem('pageOpened');
+                sessionStorage.removeItem('savedScrollPosition');
+                bgm.volume = 0;
+            } else {
+                const savedState = sessionStorage.getItem('pageOpened');
+                const savedScrollY = sessionStorage.getItem('savedScrollPosition');
+
+                if (savedState === 'true') {
+                    pageOpened = true;
+                    heroSection.classList.add('no-transition', 'fade-out');
+                    document.body.classList.add('page-opened', 'page-opened-direct');
+                    
+                    // 다른 탭/페이지에서 되돌아왔을 때는 음악을 꺼진 상태(볼륨 0)로 유지합니다.
+                    targetVolume = 0.0;
+                    bgm.volume = 0;
+                    volumeSlider.value = 0;
+                    bgm.pause(); // 음악을 일시정지 상태로 둡니다.
+
+                    setTimeout(() => {
+                        if (savedScrollY) {
+                            window.scrollTo(0, parseInt(savedScrollY, 10));
+                        }
+                    }, 50);
+                } else {
+                    bgm.volume = 0;
+                }
+            }
+        });
+
+        // 본문 스크롤 위치 세션 저장 기록기
+        window.addEventListener('scroll', function() {
+            if (pageOpened) {
+                sessionStorage.setItem('savedScrollPosition', window.scrollY);
+            }
+        });
+
+        // 클릭 제어 핸들러 펑션
+        function handleHeroClick(e) {
+            if (pageOpened) return;
+
+            // 1. 물결 엘리먼트 생성 및 절대 좌표 연산 부여
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple-effect');
+            
+            ripple.style.left = `${e.clientX}px`;
+            ripple.style.top = `${e.clientY}px`;
+            
+            const size = Math.max(window.innerWidth, window.innerHeight) * 2;
+            ripple.style.width = `${size}px`;
+            ripple.style.height = `${size}px`;
+            ripple.style.marginLeft = `${-size/2}px`;
+            ripple.style.marginTop = `${-size/2}px`;
+
+            heroSection.appendChild(ripple);
+
+            // 2. 오디오 볼륨락 해제 및 즉시 플레이 (초기 볼륨 70% 지정)
+            targetVolume = 0.7; 
+            bgm.play().then(() => {
+                if (!fadeAnimationId) smoothVolumeFade(); 
+            }).catch(() => {
+                if (!fadeAnimationId) smoothVolumeFade();
+            });
+
+            // 3. 서서히 웅장하게 화면 체인지 작동
+            setTimeout(() => {
+                pageOpened = true;
+                heroSection.classList.add('fade-out');
+                document.body.classList.add('page-opened');
+                
+                sessionStorage.setItem('pageOpened', 'true');
+                
+                // 메인 화면 진입 후 3초(3000ms) 동안은 70% 볼륨 유지, 그 후 배경음 레벨(20%)로 다운
+                setTimeout(() => {
+                    if (!userInteractedWithVolume) {
+                        targetVolume = 0.2; 
+                    }
+                }, 3000);
+
+            }, 450);
+
+            // 애니메이션 파기 데이터 클렌징
+            setTimeout(() => {
+                ripple.remove();
+            }, 1500);
+        }
+
+        // 부드러운 볼륨 전환을 처리하는 프레임 애니메이션 루프
+        function smoothVolumeFade() {
+            if (userInteractedWithVolume || bgm.muted) {
+                fadeAnimationId = requestAnimationFrame(smoothVolumeFade);
+                return;
+            }
+
+            const diff = targetVolume - bgm.volume;
+            if (Math.abs(diff) > 0.005) {
+                bgm.volume += diff * 0.03; 
+                volumeSlider.value = bgm.volume;
+            } else {
+                bgm.volume = targetVolume;
+                volumeSlider.value = targetVolume;
+            }
+
+            fadeAnimationId = requestAnimationFrame(smoothVolumeFade);
+        }
+
+        // 스크롤 시 볼륨 복귀 방지 리스너 공백 유지
+        window.addEventListener('scroll', function() {
+            if (!pageOpened) return; 
+        });
+
+        function changeVolume(val) {
+            userInteractedWithVolume = true; 
+            targetVolume = parseFloat(val);
+            bgm.volume = targetVolume;
+            bgm.muted = (targetVolume === 0);
+            updateMuteIcon(bgm.muted);
+            if (targetVolume > 0 && bgm.paused) {
+                bgm.play().catch(() => {});
+            }
+        }
+
+        function toggleMute() {
+            userInteractedWithVolume = true; 
+            bgm.muted = !bgm.muted;
+            updateMuteIcon(bgm.muted);
+            if (!bgm.muted) {
+                if (bgm.volume === 0) {
+                    bgm.volume = 0.5;
+                    targetVolume = 0.5;
+                    volumeSlider.value = 0.5;
+                }
+                if (bgm.paused) {
+                    bgm.play().catch(() => {});
+                }
+            }
+        }
+
+        function updateMuteIcon(isMuted) {
+            if (isMuted) {
+                muteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06zm7.137 2.096a.5.5 0 1 1 .708.708L12.707 8l1.855 1.846a.5.5 0 0 1-.708.708L12 8.707l-1.854 1.847a.5.5 0 1 1-.708-.708L11.293 8 9.438 6.154a.5.5 0 0 1 .708-.708L12 7.293l1.854-1.747z"/></svg>`;
+            } else {
+                muteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.536 14.01A8.47 8.47 0 0 0 14 10c0-1.68-.487-3.243-1.325-4.556a.5.5 0 0 0-.85.526A7.47 7.47 0 0 1 13 10c0 1.472-.4 2.852-1.101 4.028a.5.5 0 0 0 .848.544z"/><path d="M9.774 11.246A1 1 0 0 0 10 11V5a1 1 0 0 0-1.707-.707L5.828 6.757H4a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h1.828l2.465 2.465a1 1 0 0 0 .481.224z"/></svg>`;
+            }
+        }
+
+        // 10초 주기 무한 루프 배너 기믹
+        let currentIdx = 0;
+        const sliderWrapper = document.getElementById('sliderWrapper');
+        const dots = document.querySelectorAll('.dot');
+        const totalSlides = dots.length;
+        const slideInterval = 10000; 
+
+        function updateSlider() {
+            sliderWrapper.style.transform = `translateX(-${currentIdx * 100}%)`;
+            dots.forEach((dot, idx) => {
+                if (idx === currentIdx) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        function nextSlide() {
+            currentIdx++;
+            if (currentIdx >= totalSlides) {
+                currentIdx = 0;
+            }
+            updateSlider();
+            resetTimer();
+        }
+
+        function prevSlide() {
+            currentIdx--;
+            if (currentIdx < 0) {
+                currentIdx = totalSlides - 1;
+            }
+            updateSlider();
+            resetTimer();
+        }
+
+        function goToSlide(idx) {
+            currentIdx = idx;
+            updateSlider();
+            resetTimer();
+        }
+
+        let autoSlider = setInterval(nextSlide, slideInterval);
+
+        function resetTimer() {
+            clearInterval(autoSlider);
+            autoSlider = setInterval(nextSlide, slideInterval);
+        }
+
+        // ========================================================
+        // [완벽 보완] 스마트폰 모바일 슬라이드 터치 스와이프 로직
+        // ========================================================
+        const sliderContainer = document.getElementById('eventSliderContainer');
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        // 터치 시작 시점 좌표 저장 (X축과 Y축 둘 다 기록)
+        sliderContainer.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        // 터치가 끝나는 시점에 거리 및 대각선 오차 판정 연산 가동
+        sliderContainer.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            // 수평 스와이프 거리가 수직(위아래 스크롤) 거리보다 크고, 최소 40px 이상 이동했을 때만 슬라이드 전환을 발동시킵니다.
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 40) {
+                if (deltaX > 0) {
+                    prevSlide(); // 오른쪽으로 밀었으므로 이전 슬라이드
+                } else {
+                    nextSlide(); // 왼쪽으로 밀었으므로 다음 슬라이드
+                }
+            }
+        }, { passive: true });
+
+        function navigateToPage(menuType) {
+            switch (menuType) {
+                case 'awakening': window.location.href = 'awakening.html'; break;
+                case 'myeongryun': window.location.href = 'myeongryun.html'; break;
+                case 'secret-contract': window.location.href = 'secret_contract.html'; break;
+                case 'coupon-code': window.location.href = 'coupon_code.html'; break;
+                case 'event-detail-2': window.location.href = 'event_detail_2.html'; break;
+                case 'event-detail-3': window.location.href = 'event_detail_3.html'; break;
+                default: console.log('연결 타겟이 매핑되지 않았습니다.');
+            }
+        }
+    </script>
+</body>
+</html>
+</body>
+</html>

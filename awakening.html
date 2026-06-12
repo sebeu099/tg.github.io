@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>망각전야 - 각성체 정보</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #192326;
+            color: #e3e8e9;
+            font-family: 'Noto Sans KR', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 1.8rem;
+            letter-spacing: 3px;
+            color: #9eb1b6;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            flex-wrap: wrap; /* 모바일에서 탭 버튼이 넘칠 경우 자연스럽게 줄바꿈 */
+        }
+        .tab-button {
+            background: #11181a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ccd7d9;
+            padding: 12px 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+            transform: skewX(-10deg);
+        }
+        .tab-button span {
+            display: inline-block;
+            transform: skewX(10deg);
+        }
+        .tab-button:hover, .tab-button.active {
+            background: #162023;
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+        }
+
+        .tab-button.active[data-target="초차원"] { border-color: #a35ae6; box-shadow: 0 0 10px rgba(163, 90, 230, 0.3); }
+        .tab-button.active[data-target="혈육"] { border-color: #e65a5a; box-shadow: 0 0 10px rgba(230, 90, 90, 0.3); }
+        .tab-button.active[data-target="혼돈"] { border-color: #f1c40f; box-shadow: 0 0 10px rgba(241, 196, 15, 0.3); }
+        .tab-button.active[data-target="심해"] { border-color: #5aa9e6; box-shadow: 0 0 10px rgba(90, 169, 230, 0.3); }
+        .tab-button.active[data-target="ALL"] { border-color: rgba(255, 255, 255, 0.6); }
+
+        /* 기본 그리드 설정 (기본적으로 반응형) */
+        .awakener-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            justify-content: center;
+            gap: 15px;
+            transition: all 0.4s ease;
+        }
+
+        /* [추가] 모바일 환경 (스마트폰 세로 모드 - 480px 이하) - 2열 고정 및 비율 최적화 */
+        @media (max-width: 480px) {
+            .main-content { padding: 20px 10px; }
+            .section-title { font-size: 1.4rem; margin-bottom: 20px; }
+            .tab-container { gap: 6px; margin-bottom: 25px; }
+            .tab-button { padding: 8px 16px; font-size: 0.85rem; }
+            
+            .awakener-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 10px; 
+            }
+            .awakener-card { max-height: 360px !important; } /* 기본 높이 축소 */
+            .awakener-card:hover, .awakener-card.highlighted { max-height: 600px !important; }
+            .portrait-box { height: 160px; } /* 모바일에서 캐릭터 이미지 영역 높이 조정 */
+            .profile-desc { padding: 12px; }
+            .char-name-kr { font-size: 1.1rem; }
+            .char-name-en { font-size: 0.75rem; margin-bottom: 6px; }
+            .char-type-badge { font-size: 0.75rem; padding: 2px 8px; }
+            
+            .myeongryun-expand-layer { padding: 0 8px; }
+            .awakener-card:hover .myeongryun-expand-layer,
+            .awakener-card.highlighted .myeongryun-expand-layer { padding: 10px 8px; max-height: 240px; }
+            .myeongryun-title-label { font-size: 0.65rem; margin-bottom: 6px; }
+            .myeongryun-pair-box { gap: 5px; }
+            .myeongryun-sub-card { padding: 6px 3px; }
+            .myeongryun-slot-frame { height: 50px; margin-bottom: 4px; }
+            .myeong-text-title { font-size: 0.7rem; }
+            .myeong-rarity-tag { font-size: 0.6rem; }
+            
+            .secret-contract-box { padding: 10px 5px; }
+            .secret-contract-title { font-size: 0.7rem; margin-bottom: 4px; }
+        }
+
+        /* [추가] 태블릿 및 스마트폰 가로 모드 (481px ~ 1023px) - 3열 배치 */
+        @media (min-width: 481px) and (max-width: 1023px) {
+            .awakener-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+            }
+            .portrait-box { height: 200px; }
+        }
+
+        /* 데스크탑 PC 환경 (1024px 이상) - 4열 고정 */
+        @media (min-width: 1024px) {
+            .awakener-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .awakener-card {
+            position: relative;
+            background: #11181a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            opacity: 1;
+            transform: scale(1);
+            max-height: 430px;
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        border-color 0.4s ease, 
+                        box-shadow 0.4s ease,
+                        opacity 0.3s ease,
+                        background-color 0.4s ease,
+                        max-height 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .awakener-card:hover, .awakener-card.highlighted {
+            background: #162023;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+            transform: translateY(-8px) scale(1.04);
+            z-index: 5;
+            max-height: 700px;
+        }
+
+        .awakener-card[data-faction="초차원"]:hover { border-color: #a35ae6; }
+        .awakener-card[data-faction="혈육"]:hover { border-color: #e65a5a; }
+        .awakener-card[data-faction="혼돈"]:hover { border-color: #f1c40f; }
+        .awakener-card[data-faction="심해"]:hover { border-color: #5aa9e6; }
+
+        .awakener-card::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .portrait-box {
+            position: relative;
+            width: 100%;
+            height: 240px; 
+            background: #0d1214;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .portrait-box .char-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .awakener-card:hover .portrait-box .char-img,
+        .awakener-card.highlighted .portrait-box .char-img {
+            transform: scale(1.06);
+        }
+
+        .faction-tag {
+            position: absolute;
+            top: 15px; left: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 3px 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(17, 24, 26, 0.85);
+            letter-spacing: 0.5px;
+            z-index: 5;
+        }
+        .tag-dimension { border-color: #a35ae6; color: #a35ae6; }
+        .tag-flesh { border-color: #e65a5a; color: #e65a5a; }
+        .tag-chaos { border-color: #f1c40f; color: #f1c40f; }
+        .tag-deep { border-color: #5aa9e6; color: #5aa9e6; }
+
+        .profile-desc {
+            padding: 20px;
+            text-align: center;
+        }
+        .char-name-kr { font-size: 1.3rem; font-weight: 700; color: #ffffff; letter-spacing: 1px; margin-bottom: 4px; }
+        .char-name-en { font-size: 0.85rem; color: #8a999d; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+        .char-type-badge { font-size: 0.9rem; color: #b0bec2; display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.04); padding: 4px 12px; }
+
+        .myeongryun-expand-layer {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.45s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
+            padding: 0 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0);
+            background: #0a0f10;
+        }
+
+        .awakener-card:hover .myeongryun-expand-layer,
+        .awakener-card.highlighted .myeongryun-expand-layer {
+            max-height: 280px; 
+            opacity: 1;
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .myeongryun-title-label {
+            font-size: 0.75rem;
+            color: #8a999d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            text-align: left;
+            border-left: 2px solid rgba(255,255,255,0.2);
+            padding-left: 6px;
+        }
+        .myeongryun-pair-box { display: flex; gap: 8px; }
+        
+        .myeongryun-sub-card { 
+            flex: 1; 
+            background: #11181a; 
+            border: 1px solid rgba(255,255,255,0.05); 
+            padding: 10px 5px; 
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        .myeongryun-sub-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: #192326;
+        }
+
+        .myeongryun-slot-frame {
+            width: 100%; 
+            height: 80px; 
+            background: #192326; 
+            margin-bottom: 8px; 
+            overflow: hidden; 
+            position: relative; 
+            border: 1px solid rgba(255,255,255,0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .myeongryun-slot-frame .myeong-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        .myeong-text-title { font-size: 0.8rem; color: #ccd7d9; font-weight: 500; line-height: 1.3; }
+        .myeong-rarity-tag { font-size: 0.65rem; display: inline-block; padding: 1px 4px; margin-top: 3px; background: rgba(255,255,255,0.04); color: #8a999d; }
+
+        .back-home-container { text-align: center; margin-top: 40px; }
+        .back-btn { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #ccd7d9; padding: 12px 30px; cursor: pointer; letter-spacing: 1px; transition: all 0.25s; }
+        .back-btn:hover { border-color: #ffffff; color: #ffffff; background: #11181a; }
+        
+        .secret-contract-box {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 10px;
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .secret-contract-box:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        
+        .secret-contract-title {
+            font-size: 0.8rem;
+            color: #8a999d;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            transition: color 0.2s;
+        }
+        .secret-contract-box:hover .secret-contract-title {
+            color: #ffffff;
+        }
+        
+        .secret-contract-img {
+            max-width: 80%;
+            height: auto;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+        .secret-contract-box:hover .secret-contract-img {
+            transform: scale(1.03);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-content">
+        <h2 class="section-title">각성체 정보</h2>
+
+        <div class="tab-container">
+            <button class="tab-button active" data-target="ALL" onclick="filterFaction('ALL')"><span>ALL</span></button>
+            <button class="tab-button" data-target="초차원" onclick="filterFaction('초차원')"><span>초차원</span></button>
+            <button class="tab-button" data-target="혈육" onclick="filterFaction('혈육')"><span>혈육</span></button>
+            <button class="tab-button" data-target="혼돈" onclick="filterFaction('혼돈')"><span>혼돈</span></button>
+            <button class="tab-button" data-target="심해" onclick="filterFaction('심해')"><span>심해</span></button>
+        </div>
+
+        <div class="awakener-grid">
+            
+            <div class="awakener-card" data-faction="초차원">
+                <div class="portrait-box">
+                    <span class="faction-tag tag-dimension">초차원</span>
+                    <img src="Castor-thumb.png" class="char-img" alt="카스토르">
+                </div>
+                <div class="profile-desc">
+                    <div class="char-name-kr">카스토르</div>
+                    <div class="char-name-en">Castor</div>
+                    <div class="char-type-badge">방어형</div>
+                </div>
+                <div class="myeongryun-expand-layer">
+                    <div class="myeongryun-title-label">추천 명륜 매칭 (클릭 시 이동)</div>
+                    <div class="myeongryun-pair-box">
+                        <div class="myeongryun-sub-card" onclick="location.href='myeongryun.html'; event.stopPropagation();">
+                            <div class="myeongryun-slot-frame"><img src="견딜 수 없는 자유.png" class="myeong-img" alt="견딜 수 없는 자유"></div>
+                            <div class="myeong-text-title">견딜 수 없는 자유</div>
+                            <span class="myeong-rarity-tag">SSR추천</span>
+                        </div>
+                        <div class="myeongryun-sub-card" onclick="location.href='myeongryun.html'; event.stopPropagation();">
+                            <div class="myeongryun-slot-frame"><img src="존재하지 않는 곳.png" class="myeong-img" alt="존재하지 않는 곳"></div>
+                            <div class="myeong-text-title">존재하지 않는 곳</div>
+                            <span class="myeong-rarity-tag">SR추천</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="secret-contract-box" onclick="location.href='secret_contract.html'; event.stopPropagation();">
+                    <div class="secret-contract-title">저주받은 토끼</div>
+                    <img src="비밀계약 토끼.png" class="secret-contract-img" alt="저주받은 토끼">
+                </div>
+            </div>
+
+            <div class="awakener-card" data-faction="혈육">
+                <div class="portrait-box">
+                    <span class="faction-tag tag-flesh">혈육</span>
+                    <img src="Thais-thumb.png" class="char-img" alt="타이스">
+                </div>
+                <div class="profile-desc">
+                    <div class="char-name-kr">타이스</div>
+                    <div class="char-name-en">Thais</div>
+                    <div class="char-type-badge">보조형</div>
+                </div>
+                <div class="myeongryun-expand-layer">
+                    <div class="myeongryun-title-label">추천 명륜 매칭 (클릭 시 이동)</div>
+                    <div class="myeongryun-pair-box">
+                        <div class="myeongryun-sub-card" onclick="location.href='myeongryun.html'; event.stopPropagation();">
+                            <div class="myeongryun-slot-frame"><img src="자비로운양육.png" class="myeong-img" alt="자비로운 양육"></div>
+                            <div class="myeong-text-title">자비로운 양육</div>
+                            <span class="myeong-rarity-tag">SSR추천</span>
+                        </div>
+                        <div class="myeongryun-sub-card" onclick="location.href='myeongryun.html'; event.stopPropagation();">
+                            <div class="myeongryun-slot-frame"><img src="정신집중.png" class="myeong-img" alt="정신 집중"></div>
+                            <div class="myeong-text-title">정신 집중</div>
+                            <span class="myeong-rarity-tag">SR추천</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="secret-contract-box" onclick="location.href='secret_contract.html'; event.stopPropagation();">
+                    <div class="secret-contract-title">생명력 착취</div>
+                    <img src="생명력착취.png" class="secret-contract-img" alt="생명력 착취">
+                </div>
+            </div>
+
+            <div class="awakener-card" data-faction="혼돈">
+                <div class="portrait-box">
+                    <span class="faction-tag tag-chaos">혼돈</span>
+                    <img src="Tawil-thumb.png" class="char-img" alt="타비">
+                </div>
+                <div class="profile-desc">
+                    <div class="char-name-kr">타비</div>
+                    <div class="char-name-en">Tabi</div>
+                    <div class="char-type-badge">보조형</div>
+                </div>
+                <div class="myeongryun-expand-layer">
+                    <div class="myeongryun-title-label">추천 명륜 매칭 (클릭 시 이동)</div>
+                    <div class="myeongryun-pair-box">
+                        <div class="myeongryun-sub-card" onclick="location.href='myeongryun.html'; event.stopPropagation();">
+                            <div class="myeongryun-slot-frame"><img src="감춰진 수레바퀴.png" class="myeong-img" alt="감춰진 수레바퀴"></div>
+                            <div class="myeong-text-title">감춰진 수레바퀴</div>
+                            <span class="myeong-rarity-tag">SSR추천</span>
+                        </div>
+                        <div class="myeongryun-sub-card" onclick="location.href='myeongryun.html'; event.stopPropagation();">
+                            <div class="myeongryun-slot-frame"><img src="모임의 순간.png" class="myeong-img" alt="모임의 순간"></div>
+                            <div class="myeong-text-title">모임의 순간</div>
+                            <span class="myeong-rarity-tag">SR추천</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="secret-contract-box" onclick="location.href='secret_contract.html'; event.stopPropagation();">
+                    <div class="secret-contract-title">약재의 꿈</div>
+                    <img src="약재의꿈.png" class="secret-contract-img" alt="약재의 꿈">
+                </div>
+            </div>
+
+            <div class="awakener-card" data-faction="심해">
+                <div class="portrait-box">
+                    <span class="faction-tag tag-deep">심해</span>
+                    <img src="Coporsant-thumb.png" class="char-img" alt="코퍼산트">
+                </div>
+                <div class="profile-desc">
+                    <div class="char-name-kr">코퍼산트</div>
+                    <div class="char-name-en">Corpuscant</div>
+                    <div class="char-type-badge">보조형</div>
+                </div>
+                <div class="myeongryun-expand-layer">
+                    <div class="myeongryun-title-label">추천 명륜 매칭 (클릭 시 이동)</div>
+                    <div class="myeongryun-pair-box">
+                        <div class="myeongryun-sub-card" onclick="location.href='myeongryun.html'; event.stopPropagation();">
+                            <div class="myeongryun-slot-frame"><img src="마지막시편.png" class="myeong-img" alt="마지막 시편"></div>
+                            <div class="myeong-text-title">마지막 시편</div>
+                            <span class="myeong-rarity-tag">SSR추천</span>
+                        </div>
+                        <div class="myeongryun-sub-card" onclick="location.href='myeongryun.html'; event.stopPropagation();">
+                            <div class="myeongryun-slot-frame"><img src="소중한친구에게.png" class="myeong-img" alt="소중한 친구에게"></div>
+                            <div class="myeong-text-title">소중한 친구에게</div>
+                            <span class="myeong-rarity-tag">SR추천</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="secret-contract-box" onclick="location.href='secret_contract.html'; event.stopPropagation();">
+                    <div class="secret-contract-title">약재의 꿈</div>
+                    <img src="약재의꿈.png" class="secret-contract-img" alt="약재의 꿈">
+                </div>
+            </div>
+
+        </div>
+
+        <div class="back-home-container">
+            <button class="back-btn" onclick="window.location.href='index.html'"><span>메인으로 돌아가기</span></button>
+        </div>
+    </div>
+
+    <script>
+        function filterFaction(faction) {
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('data-target') === faction) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            const cards = document.querySelectorAll('.awakener-card');
+            cards.forEach(card => {
+                const cardFaction = card.getAttribute('data-faction');
+                if (faction === 'ALL' || cardFaction === faction) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

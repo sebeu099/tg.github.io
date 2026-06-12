@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>망각전야 - 교환 코드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #192326;
+            color: #e3e8e9;
+            font-family: 'Noto Sans KR', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+
+        .main-content {
+            max-width: 900px; /* 리스트 형태에 알맞게 가로폭 최적화 */
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section-title {
+            text-align: left;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            color: #ffd700; /* 이미지의 노란색 타이틀 반영 */
+            font-weight: 700;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sub-title-label {
+            font-size: 1.1rem;
+            color: #f1c40f; /* 기간 한정 코드 노란색 */
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 3px solid #f1c40f;
+            padding-left: 10px;
+        }
+
+        /* 기존 각성체/명륜 탭의 리스트 및 모션 시스템 계승 */
+        .coupon-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: all 0.4s ease;
+        }
+
+        /* 카드 기본 형태 및 호버 애니메이션 완벽 이식 */
+        .coupon-card {
+            position: relative;
+            background: #11181a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 22px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        border-color 0.4s ease, 
+                        box-shadow 0.4s ease,
+                        background-color 0.4s ease;
+        }
+
+        /* 호버 시 위로 살짝 뜨며 테두리가 밝아지는 고유 모션 */
+        .coupon-card:hover {
+            background: #162023;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            transform: translateY(-4px) scale(1.01);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .coupon-card::before {
+            content: '';
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.01);
+            pointer-events: none;
+        }
+
+        /* 코드 정보 텍스트 영역 */
+        .coupon-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .coupon-code {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 1.5px;
+        }
+
+        .coupon-reward {
+            font-size: 0.95rem;
+            color: #a9b7ba;
+        }
+
+        .coupon-timer {
+            font-size: 0.85rem;
+            color: #ff9f43; /* 남은 시간 강조 색상 */
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+
+        /* 기존 버튼 스타일과 어우러지는 녹색 복사 버튼 (사선 변형 적용) */
+        .copy-btn {
+            background: #2ecc71;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 10px 24px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+            transform: skewX(-10deg);
+        }
+
+        .copy-btn span {
+            display: inline-block;
+            transform: skewX(10deg);
+        }
+
+        .copy-btn:hover {
+            background: #27ae60;
+            box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* 복사 완료 후 일시적 피드백 효과용 클래스 */
+        .copy-btn.copied {
+            background: #34495e;
+            color: #7f8c8d;
+        }
+
+        /* 하단 메인 이동 버튼 세션 모션 매칭 */
+        .back-home-container { text-align: center; margin-top: 50px; }
+        .back-btn { 
+            background: transparent; 
+            border: 1px solid rgba(255,255,255,0.15); 
+            color: #ccd7d9; 
+            padding: 12px 30px; 
+            cursor: pointer; 
+            letter-spacing: 1px; 
+            transition: all 0.25s; 
+            transform: skewX(-10deg);
+        }
+        .back-btn span {
+            display: inline-block;
+            transform: skewX(10deg);
+        }
+        .back-btn:hover { border-color: #ffffff; color: #ffffff; background: #11181a; }
+    </style>
+</head>
+<body>
+
+    <div class="main-content">
+        <h2 class="section-title">🎫 교환 코드</h2>
+
+        <div class="sub-title-label">🗓️ 기간 한정 코드</div>
+
+        <div class="coupon-list">
+            
+            <div class="coupon-card">
+                <div class="coupon-info">
+                    <div class="coupon-code" id="code-1">MSBL-TEWJ-PUBC</div>
+                    <div class="coupon-reward">은심 500개, 무구의 은핵 5개</div>
+                    <div class="coupon-timer">⌛ 1일 남음</div>
+                </div>
+                <button class="copy-btn" onclick="copyCode('code-1', this)"><span>복사</span></button>
+            </div>
+
+            <div class="coupon-card">
+                <div class="coupon-info">
+                    <div class="coupon-code" id="code-2">DPXW-TFCU-GTWF</div>
+                    <div class="coupon-reward">은심 500개, 무구의 은핵 5개</div>
+                    <div class="coupon-timer">⌛ 5일 남음</div>
+                </div>
+                <button class="copy-btn" onclick="copyCode('code-2', this)"><span>복사</span></button>
+            </div>
+
+            <div class="coupon-card">
+                <div class="coupon-info">
+                    <div class="coupon-code" id="code-3">DC50000</div>
+                    <div class="coupon-reward">은심 1000개, 광휘의 은핵 5개</div>
+                    <div class="coupon-timer">⌛ 8일 남음</div>
+                </div>
+                <button class="copy-btn" onclick="copyCode('code-3', this)"><span>복사</span></button>
+            </div>
+
+            <div class="coupon-card">
+                <div class="coupon-info">
+                    <div class="coupon-code" id="code-4">VCHB-LEGT-KUUY</div>
+                    <div class="coupon-reward">은심 500개, 무구의 은핵 5개</div>
+                    <div class="coupon-timer">⌛ 11일 남음</div>
+                </div>
+                <button class="copy-btn" onclick="copyCode('code-4', this)"><span>복사</span></button>
+            </div>
+
+            <div class="coupon-card">
+                <div class="coupon-info">
+                    <div class="coupon-code" id="code-5">SayanOUta</div>
+                    <div class="coupon-reward">은심 500개, 무구의 은핵 5개</div>
+                    <div class="coupon-timer">⌛ 67일 남음</div>
+                </div>
+                <button class="copy-btn" onclick="copyCode('code-5', this)"><span>복사</span></button>
+            </div>
+
+            <div class="coupon-card">
+                <div class="coupon-info">
+                    <div class="coupon-code" id="code-6">YouSavedMorimens</div>
+                    <div class="coupon-reward">무구의 은핵 100개</div>
+                    <div class="coupon-timer">⌛ 74일 남음</div>
+                </div>
+                <button class="copy-btn" onclick="copyCode('code-6', this)"><span>복사</span></button>
+            </div>
+
+        </div>
+
+        <div class="back-home-container">
+            <button class="back-btn" onclick="window.location.href='index.html'"><span>메인으로 돌아가기</span></button>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(elementId, btnElement) {
+            const codeText = document.getElementById(elementId).innerText;
+            
+            navigator.clipboard.writeText(codeText).then(() => {
+                // 복사 성공 시 버튼 텍스트 변경 피드백
+                const span = btnElement.querySelector('span');
+                span.innerText = "완료";
+                btnElement.classList.add('copied');
+                
+                // 1.5초 후 원래대로 복구
+                setTimeout(() => {
+                    span.innerText = "복사";
+                    btnElement.classList.remove('copied');
+                }, 1500);
+            }).catch(err => {
+                console.error('복사 실패: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
