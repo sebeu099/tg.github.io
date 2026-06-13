@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>망각전야 - 교환 코드</title>
+    <title>망각전야 - 비밀계약 정보</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
 
         .main-content {
-            max-width: 900px; /* 리스트 형태에 알맞게 가로폭 최적화 */
+            max-width: 1400px;
             margin: 0 auto;
             padding: 40px 20px;
             position: relative;
@@ -27,140 +27,221 @@
         }
 
         .section-title {
-            text-align: left;
-            font-size: 1.8rem;
-            letter-spacing: 2px;
-            color: #ffd700; /* 이미지의 노란색 타이틀 반영 */
-            font-weight: 700;
-            margin-bottom: 30px;
+            text-align: center;
+            font-size: calc(1.8rem + 4px);
+            letter-spacing: 3px;
+            color: #9eb1b6;
+            text-transform: uppercase;
+            margin-bottom: 35px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             padding-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
-        .sub-title-label {
-            font-size: 1.1rem;
-            color: #f1c40f; /* 기간 한정 코드 노란색 */
+        .contract-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+            justify-content: center;
+            gap: 40px;
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-left: 3px solid #f1c40f;
-            padding-left: 10px;
         }
 
-        /* 기존 각성체/명륜 탭의 리스트 및 모션 시스템 계승 */
-        .coupon-list {
+        .card-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+        }
+
+        .contract-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #11181a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0;
+            cursor: pointer;
+            overflow: visible;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            transition: all 0.4s ease;
-        }
-
-        /* 카드 기본 형태 및 호버 애니메이션 완벽 이식 */
-        .coupon-card {
-            position: relative;
-            background: #11181a;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 22px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             width: 100%;
+            z-index: 10;
             transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
                         border-color 0.4s ease, 
                         box-shadow 0.4s ease,
-                        background-color 0.4s ease;
+                        z-index 0.1s ease;
         }
 
-        /* 호버 시 위로 살짝 뜨며 테두리가 밝아지는 고유 모션 */
-        .coupon-card:hover {
+        .contract-card:hover {
             background: #162023;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-            transform: translateY(-4px) scale(1.01);
-            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.4);
+            z-index: 999;
         }
 
-        .coupon-card::before {
+        .contract-card::before {
             content: '';
             position: absolute;
-            top: 4px; left: 4px; right: 4px; bottom: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.01);
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
             pointer-events: none;
+            z-index: 4;
         }
 
-        /* 코드 정보 텍스트 영역 */
-        .coupon-info {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .coupon-code {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #ffffff;
-            letter-spacing: 1.5px;
-        }
-
-        .coupon-reward {
-            font-size: 0.95rem;
-            color: #a9b7ba;
-        }
-
-        .coupon-timer {
-            font-size: 0.85rem;
-            color: #ff9f43; /* 남은 시간 강조 색상 */
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: 500;
-        }
-
-        /* 기존 버튼 스타일과 어우러지는 녹색 복사 버튼 (사선 변형 적용) */
-        .copy-btn {
-            background: #2ecc71;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            padding: 10px 24px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            cursor: pointer;
-            letter-spacing: 1px;
-            transition: all 0.25s ease;
-            transform: skewX(-10deg);
-        }
-
-        .copy-btn span {
-            display: inline-block;
-            transform: skewX(10deg);
-        }
-
-        .copy-btn:hover {
-            background: #27ae60;
-            box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);
-            border-color: rgba(255, 255, 255, 0.3);
+        .image-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            height: auto;
+            background: #0d1214;
+            overflow: hidden;
         }
         
-        /* 복사 완료 후 일시적 피드백 효과용 클래스 */
-        .copy-btn.copied {
-            background: #34495e;
-            color: #7f8c8d;
+        .image-box .contract-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        
+        .contract-card:hover .image-box .contract-img {
+            transform: scale(1.04);
         }
 
-        /* 하단 메인 이동 버튼 세션 모션 매칭 */
+        /* [수정] 노란색 텍스트 아래에 큰 마진을 주어 엔터 두 번 친 효과(큰 공백)를 부여 */
+        .contract-name-kr { 
+            font-size: calc(1.5rem + 2px); 
+            font-weight: 700; 
+            color: #ffd700; 
+            letter-spacing: 1px; 
+            margin-bottom: 35px; /* 대폭 늘려서 아래 정보들을 밑으로 밀어냅니다 */
+            text-align: left;
+            text-shadow: 0 0 6px rgba(255, 215, 0, 0.2);
+            grid-column: 1 / -1;
+        }
+
+        /* [수정] 행(세로) 간격을 완전히 좁혀서 텍스트 밀도를 높임 */
+        .info-expand-layer {
+            position: absolute;
+            top: -1px;
+            left: 100%;
+            
+            width: max-content;
+            max-width: 0;
+            height: calc(100% + 2px);
+            min-height: 250px; 
+            
+            background: rgba(10, 15, 16, 0.98); 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 24px; 
+            box-shadow: 15px 0 30px rgba(0, 0, 0, 0.5);
+            
+            opacity: 0;
+            overflow: hidden;
+            white-space: nowrap; 
+            pointer-events: none;
+            
+            display: grid;
+            grid-auto-flow: column; 
+            grid-template-rows: auto 1fr;
+            gap: 4px 40px; /* 세로 간격을 4px로 극도로 좁혀 레이아웃을 붙임 */
+            
+            transition: max-width 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        opacity 0.3s ease,
+                        border-color 0.4s ease;
+        }
+
+        .contract-card:hover .info-expand-layer {
+            max-width: 1000px; 
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .info-column-block {
+            display: inline-block;
+            vertical-align: top;
+            white-space: normal; 
+            width: 300px; 
+        }
+
+        @media (min-width: 1025px) {
+            .contract-grid .card-wrapper:nth-child(3n) {
+                position: relative;
+            }
+            .contract-grid .card-wrapper:nth-child(3n) .info-expand-layer {
+                left: auto;
+                right: 100%;
+                box-shadow: -15px 0 30px rgba(0, 0, 0, 0.5);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .contract-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+            .card-wrapper { aspect-ratio: auto; height: auto; margin-bottom: 15px; }
+            .contract-card { position: static; overflow: hidden; }
+            .info-expand-layer {
+                position: static;
+                width: 100%;
+                max-height: 0;
+                max-width: none !important;
+                height: auto;
+                min-height: 0;
+                opacity: 0;
+                white-space: normal;
+                display: block;
+                transition: max-height 0.4s ease, opacity 0.3s ease;
+                border: none !important;
+                border-top: 1px solid rgba(255,255,255,0.05) !important;
+                padding: 15px;
+            }
+            .info-column-block { width: 100%; }
+            .contract-card:hover .info-expand-layer {
+                max-height: 1200px;
+                opacity: 1;
+            }
+        }
+
+        /* [수정] 라벨 바로 밑 본문 텍스트가 바짝 붙도록 하단 여백 제거 수준으로 축소 */
+        .info-title-label {
+            font-size: calc(0.9rem + 4px);
+            color: #8a999d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px; 
+            text-align: left;
+            border-left: 2px solid rgba(255,255,255,0.3);
+            padding-left: 8px;
+        }
+
+        /* [수정] 줄바꿈 간격을 1.3으로 더 줄여 텍스트 덩어리를 콤팩트하게 만듦 */
+        .info-description {
+            font-size: calc(0.95rem + 3px); 
+            color: #ffffff;
+            line-height: 1.35; 
+            text-align: left;
+            word-break: keep-all;
+        }
+
+        /* [수정] 각 문단간 여백 최소화 */
+        .info-description p {
+            margin-bottom: 3px; 
+        }
+        .info-description p:last-child {
+            margin-bottom: 0;
+        }
+
         .back-home-container { text-align: center; margin-top: 50px; }
         .back-btn { 
             background: transparent; 
             border: 1px solid rgba(255,255,255,0.15); 
             color: #ccd7d9; 
-            padding: 12px 30px; 
+            padding: 14px 35px; 
             cursor: pointer; 
             letter-spacing: 1px; 
             transition: all 0.25s; 
             transform: skewX(-10deg);
+            font-size: calc(0.9rem + 4px);
         }
         .back-btn span {
             display: inline-block;
@@ -172,64 +253,89 @@
 <body>
 
     <div class="main-content">
-        <h2 class="section-title">🎫 교환 코드</h2>
+        <h2 class="section-title">비밀계약 정보</h2>
 
-        <div class="sub-title-label">🗓️ 기간 한정 코드</div>
-
-        <div class="coupon-list">
+        <div class="contract-grid">
             
-            <div class="coupon-card">
-                <div class="coupon-info">
-                    <div class="coupon-code" id="code-1">MSBL-TEWJ-PUBC</div>
-                    <div class="coupon-reward">은심 500개, 무구의 은핵 5개</div>
-                    <div class="coupon-timer">⌛ 1일 남음</div>
+            <div class="card-wrapper">
+                <div class="contract-card">
+                    <div class="image-box">
+                        <img src="비밀계약 토끼.png" class="contract-img" alt="저주받은 토끼">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="contract-name-kr">저주받은 토끼</div>
+                        
+                        <div class="info-column-block">
+                            <div class="info-title-label">계약 상세 정보</div>
+                            <div class="info-description">
+                                <p>[3세트 효과]<br>영역 숙련 +12</p>
+                                <p>[6세트 효과]<br>장비자의 방어막 및 HP 회복량이 12% 상승합니다.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-column-block">
+                            <div class="info-title-label">기타 정보</div>
+                            <div class="info-description">
+                                <p>[획득처]<br>상점 : 웅식 구슬</p>
+                                <p>방어막 증가<br>HP 회복량 증가</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button class="copy-btn" onclick="copyCode('code-1', this)"><span>복사</span></button>
             </div>
 
-            <div class="coupon-card">
-                <div class="coupon-info">
-                    <div class="coupon-code" id="code-2">DPXW-TFCU-GTWF</div>
-                    <div class="coupon-reward">은심 500개, 무구의 은핵 5개</div>
-                    <div class="coupon-timer">⌛ 5일 남음</div>
+            <div class="card-wrapper">
+                <div class="contract-card">
+                    <div class="image-box">
+                        <img src="생명력착취.png" class="contract-img" alt="생명력 착취">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="contract-name-kr">생명력 착취</div>
+                        
+                        <div class="info-column-block">
+                            <div class="info-title-label">계약 상세 정보</div>
+                            <div class="info-description">
+                                <p>[3세트 효과]<br>온열쇠 충전+7.2%</p>
+                                <p>[6세트 효과]<br>팀 고유 : 턴 종료 시 장착자의 온열쇠 충전 200%에 해당하는 온열쇠 에너지를 획득합니다. 현재 영역이 혈육일 경우, 효과가 5세의 온열쇠 충전당 배아 융합 +1%로 변합니다.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-column-block">
+                            <div class="info-title-label">기타 정보</div>
+                            <div class="info-description">
+                                <p>[획득처]<br>막간 훈련: 황량한 모래의 벽</p>
+                                <p>은열쇠 충전<br>은염식 게이지<br>배아 융합</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button class="copy-btn" onclick="copyCode('code-2', this)"><span>복사</span></button>
             </div>
 
-            <div class="coupon-card">
-                <div class="coupon-info">
-                    <div class="coupon-code" id="code-3">DC50000</div>
-                    <div class="coupon-reward">은심 1000개, 광휘의 은핵 5개</div>
-                    <div class="coupon-timer">⌛ 8일 남음</div>
+            <div class="card-wrapper">
+                <div class="contract-card">
+                    <div class="image-box">
+                        <img src="약재의꿈.png" class="contract-img" alt="약재의 꿈">
+                    </div>
+                    <div class="info-expand-layer">
+                        <div class="contract-name-kr">약재의 꿈</div>
+                        
+                        <div class="info-column-block">
+                            <div class="info-title-label">계약 상세 정보</div>
+                            <div class="info-description">
+                                <p>[3세트 효과]<br>피해 증폭 +4.8%</p>
+                                <p>[6세트 효과]<br>팀 고유 : 전투 종료 시 획득하는 검은 인장이 8 감소합니다. 전투 시작 시 장비자의 타격과 방어를 제외한 명령 카드의 복사본을 1장씩 댁에 추가합니다.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-column-block">
+                            <div class="info-title-label">기타 정보</div>
+                            <div class="info-description">
+                                <p>[획득처]<br>상점: 조사 교환</p>
+                                <p>피해 증폭<br>명령 카드복제</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button class="copy-btn" onclick="copyCode('code-3', this)"><span>복사</span></button>
-            </div>
-
-            <div class="coupon-card">
-                <div class="coupon-info">
-                    <div class="coupon-code" id="code-4">VCHB-LEGT-KUUY</div>
-                    <div class="coupon-reward">은심 500개, 무구의 은핵 5개</div>
-                    <div class="coupon-timer">⌛ 11일 남음</div>
-                </div>
-                <button class="copy-btn" onclick="copyCode('code-4', this)"><span>복사</span></button>
-            </div>
-
-            <div class="coupon-card">
-                <div class="coupon-info">
-                    <div class="coupon-code" id="code-5">SayanOUta</div>
-                    <div class="coupon-reward">은심 500개, 무구의 은핵 5개</div>
-                    <div class="coupon-timer">⌛ 67일 남음</div>
-                </div>
-                <button class="copy-btn" onclick="copyCode('code-5', this)"><span>복사</span></button>
-            </div>
-
-            <div class="coupon-card">
-                <div class="coupon-info">
-                    <div class="coupon-code" id="code-6">YouSavedMorimens</div>
-                    <div class="coupon-reward">무구의 은핵 100개</div>
-                    <div class="coupon-timer">⌛ 74일 남음</div>
-                </div>
-                <button class="copy-btn" onclick="copyCode('code-6', this)"><span>복사</span></button>
             </div>
 
         </div>
@@ -239,25 +345,5 @@
         </div>
     </div>
 
-    <script>
-        function copyCode(elementId, btnElement) {
-            const codeText = document.getElementById(elementId).innerText;
-            
-            navigator.clipboard.writeText(codeText).then(() => {
-                // 복사 성공 시 버튼 텍스트 변경 피드백
-                const span = btnElement.querySelector('span');
-                span.innerText = "완료";
-                btnElement.classList.add('copied');
-                
-                // 1.5초 후 원래대로 복구
-                setTimeout(() => {
-                    span.innerText = "복사";
-                    btnElement.classList.remove('copied');
-                }, 1500);
-            }).catch(err => {
-                console.error('복사 실패: ', err);
-            });
-        }
-    </script>
 </body>
 </html>
